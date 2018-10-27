@@ -1,3 +1,4 @@
+#include<stdio.h>
 /*
  * Modified CS:APP Data Lab
  *
@@ -111,7 +112,8 @@ NOTES:
  */
 int absVal(int x)
 {
-    return 42;
+    int y = x >> 31;
+    return (x + y) ^ y;
 }
 
 /*
@@ -124,7 +126,11 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    return 42;
+    unsigned int x_s = (unsigned int)x >> 31, y_s = (unsigned int)y >> 31;
+    
+    int z = x + y;
+    unsigned int z_s = (unsigned int) z >> 31;
+    return (x_s ^ y_s) | !(x_s ^ z_s) ;
 }
 
 /*
@@ -137,7 +143,13 @@ int addOK(int x, int y)
  */
 int allEvenBits(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y & y << 16;
+    y = y & y << 8;
+    y = y & y << 4;
+    y = y & y << 2;
+    y = y << 1;
+    return y >> 31;
 }
 
 /*
@@ -150,7 +162,12 @@ int allEvenBits(int x)
  */
 int allOddBits(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y & y << 16;
+    y = y & y << 8;
+    y = y & y << 4;
+    y = y & y << 2;
+    return y >> 31;
 }
 
 /*
@@ -163,7 +180,13 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y | y << 16;
+    y = y | y << 8;
+    y = y | y << 4;
+    y = y | y << 2;
+    y = y << 1;
+    return y >> 31;
 }
 
 /*
@@ -176,7 +199,12 @@ int anyEvenBit(int x)
  */
 int anyOddBit(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y | y << 16;
+    y = y | y << 8;
+    y = y | y << 4;
+    y = y | y << 2;
+    return y >> 31;
 }
 
 /*
@@ -188,7 +216,14 @@ int anyOddBit(int x)
  */
 int bang(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y | y << 16;
+    y = y | y << 8;
+    y = y | y << 4;
+    y = y | y << 2;
+    y = y | y << 1;
+    y = y >> 31;
+    return y ^ 1;
 }
 
 /*
@@ -200,7 +235,7 @@ int bang(int x)
  */
 int bitAnd(int x, int y)
 {
-    return 42;
+    return ~(~x | ~y);
 }
 
 /*
@@ -212,7 +247,29 @@ int bitAnd(int x, int y)
  */
 int bitCount(int x)
 {
-    return 42;
+    int y = 0, count = 0;
+    const int a = 0x55, b = 0x33, c = 0x0F, mask = 0xFF;
+    y = x & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 8 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 16 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 24 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    return count;
 }
 
 /*
@@ -227,7 +284,8 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    return 42;
+    unsigned int a = (unsigned int) -1, b = (unsigned int) -1;
+    return a << lowbit & b >> (31 - highbit);
 }
 
 /*
@@ -240,7 +298,7 @@ int bitMask(int highbit, int lowbit)
  */
 int bitMatch(int x, int y)
 {
-    return 42;
+    return (~(x & ~y) & ~(y & ~x));
 }
 
 /*
@@ -252,7 +310,7 @@ int bitMatch(int x, int y)
  */
 int bitNor(int x, int y)
 {
-    return 42;
+    return ~x & ~y;
 }
 
 /*
@@ -264,7 +322,7 @@ int bitNor(int x, int y)
  */
 int bitOr(int x, int y)
 {
-    return 42;
+    return ~(~x & ~y);
 }
 
 /*
@@ -276,7 +334,14 @@ int bitOr(int x, int y)
  */
 int bitParity(int x)
 {
-    return 42;
+    unsigned int y = (unsigned int) x;
+    y = y ^ y << 16;
+    y = y ^ y << 8;
+    y = y ^ y << 4;
+    y = y ^ y << 2;
+    y = y ^ y << 1;
+    y = y >> 31;
+    return y;
 }
 
 /*
@@ -301,7 +366,7 @@ int bitReverse(int x)
  */
 int bitXor(int x, int y)
 {
-    return 42;
+    return ~(~(x & ~y) & ~(y & ~x));
 }
 
 /*
@@ -315,7 +380,7 @@ int bitXor(int x, int y)
  */
 int byteSwap(int x, int n, int m)
 {
-    return 42;
+    
 }
 
 /*
