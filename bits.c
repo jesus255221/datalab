@@ -404,7 +404,13 @@ int byteSwap(int x, int n, int m)
  */
 int conditional(int x, int y, int z)
 {
-    return 42;
+    x = x | x << 1;
+    x = x | x << 2;
+    x = x | x << 4;
+    x = x | x << 8;
+    x = x | x << 16;
+    x = x >> 31; //Sign extension if any bits are one
+    return (x & y) | (~x & z);
 }
 
 /*
@@ -418,7 +424,13 @@ int conditional(int x, int y, int z)
  */
 int countLeadingZero(int x)
 {
-    return 42;
+    x = x | x >> 1;
+    x = x | x >> 2;
+    x = x | x >> 4;
+    x = x | x >> 8;
+    x = x | x >> 16;
+    x = ~x;
+    return bitCount(x);
 }
 
 /*
