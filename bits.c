@@ -284,7 +284,7 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    unsigned int a = (unsigned int) -1, b = (unsigned int) -1;
+    unsigned int a = (unsigned int) (1 + ~1), b = (unsigned int) (1 + ~1);
     return a << lowbit & b >> (31 - highbit);
 }
 
@@ -354,7 +354,15 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
-    return 42;
+    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa, m2 = m1 >> 1; // 0xaaaaaaaa
+    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc, m4 = m3 >> 2; // 0xcccccccc
+    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0, m6 = m5 >> 4; // 0xf0f0f0f0
+    int m7 = 0x00 << 24 | 0xff << 16 | 0x00 << 8 | 0xff, m8 = m7 >> 8; // 0x00ff00ff
+    x = ((x & m1) >> 1 | (x & m2) << 1);
+    x = ((x & m3) >> 2 | (x & m4) << 2);
+    x = ((x & m5) >> 4 | (x & m6) << 4);
+    x = ((x & m7) >> 8 | (x & m8) << 8);
+    return ((x >> 16) | (x << 16));
 }
 
 /*
@@ -380,7 +388,11 @@ int bitXor(int x, int y)
  */
 int byteSwap(int x, int n, int m)
 {
-    
+    int n_value = x >> (n << 3) & 0xFF, m_value = x >> (m << 3) & 0xFF;
+    int mask = ~(0xFF << (n << 3) | (0xFF << (m << 3)));
+    x = x & mask;
+    x = x | (n_value << (m << 3)) | (m_value << (n << 3));
+    return x;
 }
 
 /*
