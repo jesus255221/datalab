@@ -126,11 +126,9 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    unsigned int x_s = (unsigned int)x >> 31, y_s = (unsigned int)y >> 31;
-    
-    int z = x + y;
-    unsigned int z_s = (unsigned int) z >> 31;
-    return (x_s ^ y_s) | !(x_s ^ z_s) ;
+    int x_s = x >> 31, y_s = y >> 31;
+    int z_s = (x + y) >> 31;
+    return !!((x_s ^ y_s) | !(x_s ^ z_s));
 }
 
 /*
@@ -143,13 +141,13 @@ int addOK(int x, int y)
  */
 int allEvenBits(int x)
 {
-    unsigned int y = (unsigned int) x;
-    y = y & y << 16;
-    y = y & y << 8;
-    y = y & y << 4;
-    y = y & y << 2;
-    y = y << 1;
-    return y >> 31;
+    x = x & x << 16;
+    x = x & x << 8;
+    x = x & x << 4;
+    x = x & x << 2;
+    x <<= 1;
+    x >>= 31;
+    return !!x;
 }
 
 /*
@@ -162,12 +160,12 @@ int allEvenBits(int x)
  */
 int allOddBits(int x)
 {
-    unsigned int y = (unsigned int) x;
-    y = y & y << 16;
-    y = y & y << 8;
-    y = y & y << 4;
-    y = y & y << 2;
-    return y >> 31;
+    x = x & x << 16;
+    x = x & x << 8;
+    x = x & x << 4;
+    x = x & x << 2;
+    x >>= 31;
+    return !!x;
 }
 
 /*
@@ -180,13 +178,13 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    unsigned int y = (unsigned int) x;
-    y = y | y << 16;
-    y = y | y << 8;
-    y = y | y << 4;
-    y = y | y << 2;
-    y = y << 1;
-    return y >> 31;
+    x = x | x << 16;
+    x = x | x << 8;
+    x = x | x << 4;
+    x = x | x << 2;
+    x <<= 1;
+    x >>= 31;
+    return !!x;
 }
 
 /*
@@ -199,12 +197,12 @@ int anyEvenBit(int x)
  */
 int anyOddBit(int x)
 {
-    unsigned int y = (unsigned int) x;
-    y = y | y << 16;
-    y = y | y << 8;
-    y = y | y << 4;
-    y = y | y << 2;
-    return y >> 31;
+    x = x | x << 16;
+    x = x | x << 8;
+    x = x | x << 4;
+    x = x | x << 2;
+    x >>= 31;
+    return !!x;
 }
 
 /*
@@ -216,14 +214,13 @@ int anyOddBit(int x)
  */
 int bang(int x)
 {
-    unsigned int y = (unsigned int) x;
-    y = y | y << 16;
-    y = y | y << 8;
-    y = y | y << 4;
-    y = y | y << 2;
-    y = y | y << 1;
-    y = y >> 31;
-    return y ^ 1;
+    x = x | x << 16;
+    x = x | x << 8;
+    x = x | x << 4;
+    x = x | x << 2;
+    x = x | x << 1;
+    x = x >> 31;
+    return (~x) & 1;
 }
 
 /*
@@ -284,8 +281,10 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    unsigned int a = (unsigned int) (1 + ~1), b = (unsigned int) (1 + ~1);
-    return a << lowbit & b >> (31 - highbit);
+    int a = 1 << 31, b = 1;
+    b = ~b;
+    int low_displace = 31 + ~lowbit + 1;
+    return ~(b << (highbit)) & (a >> low_displace);
 }
 
 /*
@@ -334,14 +333,14 @@ int bitOr(int x, int y)
  */
 int bitParity(int x)
 {
-    unsigned int y = (unsigned int) x;
+    int y = x;
     y = y ^ y << 16;
     y = y ^ y << 8;
     y = y ^ y << 4;
     y = y ^ y << 2;
     y = y ^ y << 1;
     y = y >> 31;
-    return y;
+    return !!y;
 }
 
 /*
@@ -354,15 +353,23 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
-    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa, m2 = m1 >> 1; // 0xaaaaaaaa
-    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc, m4 = m3 >> 2; // 0xcccccccc
-    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0, m6 = m5 >> 4; // 0xf0f0f0f0
-    int m7 = 0x00 << 24 | 0xff << 16 | 0x00 << 8 | 0xff, m8 = m7 >> 8; // 0x00ff00ff
-    x = ((x & m1) >> 1 | (x & m2) << 1);
-    x = ((x & m3) >> 2 | (x & m4) << 2);
-    x = ((x & m5) >> 4 | (x & m6) << 4);
-    x = ((x & m7) >> 8 | (x & m8) << 8);
-    return ((x >> 16) | (x << 16));
+    int y = x;
+    // m1 suggests mask 1 and so on
+    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa, m2 = m1 >> 1; // 0xaaaaaaaa, 0x55555555
+    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc, m4 = m3 >> 2; // 0xcccccccc, 0x33333333
+    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0, m6 = m5 >> 4; // 0xf0f0f0f0, 0xf0f0f0f0
+    int m7 = 0xff << 24 | 0x00 << 16 | 0xff << 8 | 0x00, m8 = m7 >> 8; // 0xff00ff00, 0x00ff00ff
+    int m9 = (1 << 31) >> 15, m10 = ~m9;
+    int a = 1 << 31;
+    y = (((y & m1) >> 1 & ~a) | (y & m2) << 1);
+    a >>= 1;
+    y = (((y & m3) >> 2 & ~a) | (y & m4) << 2);
+    a >>= 2;
+    y = (((y & m5) >> 4 & ~a) | (y & m6) << 4);
+    a >>= 4;
+    y = (((y & m7) >> 8 & ~a) | (y & m8) << 8);
+    a >>= 8;
+    return (((y & m9) >> 16 & ~a) | (y & m10) << 16);
 }
 
 /*
@@ -389,7 +396,7 @@ int bitXor(int x, int y)
 int byteSwap(int x, int n, int m)
 {
     int n_value = x >> (n << 3) & 0xFF, m_value = x >> (m << 3) & 0xFF;
-    int mask = ~(0xFF << (n << 3) | (0xFF << (m << 3)));
+    int mask = ~(0xFF << (n << 3) | (0xFF << (m << 3)));// Construct a mask to zero the swap bytes
     x = x & mask;
     x = x | (n_value << (m << 3)) | (m_value << (n << 3));
     return x;
@@ -424,13 +431,13 @@ int conditional(int x, int y, int z)
  */
 int countLeadingZero(int x)
 {
-    x = x | x >> 1;
+    x = x | x >> 1;//Fill ones to the LSB
     x = x | x >> 2;
     x = x | x >> 4;
     x = x | x >> 8;
     x = x | x >> 16;
     x = ~x;
-    return bitCount(x);
+    return bitCount(x);//Calculate the left zeros
 }
 
 /*
@@ -442,7 +449,7 @@ int countLeadingZero(int x)
  */
 int copyLSB(int x)
 {
-    return 42;
+    return bitReverse(x) >> 31;// Reverse it and use sign extension to construct the number
 }
 
 /*
@@ -454,7 +461,8 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    return 42;
+    int y = x ^ (~x + 1);// x xor -x
+    return !!y;
 }
 
 /*
@@ -467,7 +475,9 @@ int distinctNegation(int x)
  */
 int dividePower2(int x, int n)
 {
-    return 42;
+    int mask = ~0;// Construct 0xFFFFFFFF
+    mask = ~(mask << n);// Construct a mask 
+    return (x >> n) + !!(x & mask & x >> 31); // If x is minus number and there are ones under nth bits
 }
 
 /*
@@ -478,7 +488,12 @@ int dividePower2(int x, int n)
  */
 int evenBits(void)
 {
-    return 42;
+    int x = 1;
+    x = x | x << 2;
+    x = x | x << 4;
+    x = x | x << 8;
+    x = x | x << 16;
+    return x;
 }
 
 /*
@@ -494,7 +509,8 @@ int evenBits(void)
  */
 int ezThreeFourths(int x)
 {
-    return 42;
+    int y = x + x + x;
+    return dividePower2(y, 2);
 }
 
 /*
@@ -508,7 +524,11 @@ int ezThreeFourths(int x)
  */
 int fitsBits(int x, int n)
 {
-    return 42;
+    int sign_x = x >> 31;
+    x = x + (~sign_x + 1);
+    x = absVal(x);
+    n = n + ~0;// n--
+    return !(x >> n);
 }
 
 /*
@@ -521,7 +541,7 @@ int fitsBits(int x, int n)
  */
 int fitsShort(int x)
 {
-    return 42;
+    return fitsBits(x, 16);
 }
 
 /*
