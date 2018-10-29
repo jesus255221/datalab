@@ -557,7 +557,16 @@ int fitsShort(int x)
  */
 unsigned floatAbsVal(unsigned uf)
 {
-    return 42;
+    int x = (uf >> 23 & 0xFF);
+    int y = !!(uf & 0x7FFFFF);
+    if ( x == 0xFF && y ){
+        return uf;
+    }
+    else {
+        uf <<= 1;
+        uf >>= 1;
+        return uf;
+    }
 }
 
 /*
@@ -574,7 +583,30 @@ unsigned floatAbsVal(unsigned uf)
  */
 int floatFloat2Int(unsigned uf)
 {
-    return 42;
+    int expo = (uf >> 23 & 0xFF);
+    int mtsa = (uf & 0x7FFFFF);
+    int sign = (uf >> 31 & 0x1);
+    if (expo == 0xFF || (expo - 127) > 30) {
+        return 0x80000000u;
+    }
+    else if ((expo - 127) < 0){
+        return 0;
+    }
+    else {
+        mtsa |= (1 << 23);
+        if ((expo - 127) >= 23)
+            if (sign)
+                return -1 * (mtsa) << (expo - 127 - 23);
+            else 
+                return (mtsa) << (expo - 127 - 23);
+        else {
+            int mask = mtsa << (32 - (150 - expo));
+            if (sign)
+                return (-1 * (mtsa) >> (150 - expo)) + !!(mask);
+            else 
+                return (mtsa) >> (150 - expo);
+        }
+    }
 }
 
 /*
@@ -604,7 +636,21 @@ unsigned floatInt2Float(int x)
  */
 int floatIsEqual(unsigned uf, unsigned ug)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    //int sign_f = (uf >> 31 & 0x1);
+    int expo_g = (ug >> 23 & 0xFF);
+    int mtsa_g = (ug & 0x7FFFFF);
+    //int sign_g = (ug >> 31 & 0x1);
+    if ( expo_f == 0xFF && expo_g == 0xFF && !!mtsa_f && !!mtsa_g){
+        return 0;
+    }
+    else if( !expo_f && !expo_g && !mtsa_f && !mtsa_g ) {
+        return 1;
+    }
+    else {
+        return !(uf ^ ug);
+    }
 }
 
 /*
@@ -620,7 +666,40 @@ int floatIsEqual(unsigned uf, unsigned ug)
  */
 int floatIsLess(unsigned uf, unsigned ug)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    int sign_f = (uf >> 31 & 0x1);
+    int expo_g = (ug >> 23 & 0xFF);
+    int mtsa_g = (ug & 0x7FFFFF);
+    int sign_g = (ug >> 31 & 0x1);
+    if ((expo_f == 0xFF && mtsa_f) || (expo_g == 0xFF && mtsa_g)){
+        return 0;
+    }
+    else if((!expo_f && !mtsa_f) || (!expo_g && !mtsa_g)) {//If any of the two numbers is zero
+        if ((!expo_f && !mtsa_f) && (!expo_g && !mtsa_g)){//Both zero
+            return 0;
+        }
+        else if (!expo_f && !mtsa_f) {//First zero
+            return !sign_g;
+        }
+        else {
+            return sign_f;//Second zero
+        }
+    }
+    else if (sign_f != sign_g) {
+        return sign_f > sign_g;
+    }
+    else if (expo_f != expo_g) {
+        return sign_f ^ (expo_f < expo_g);
+    }
+    else {
+        if (mtsa_f == mtsa_g) {//The two numbers are the same
+            return 0;
+        }
+        else {
+            return sign_f ^ (mtsa_f < mtsa_g);
+        }
+    }
 }
 
 /*
@@ -636,7 +715,14 @@ int floatIsLess(unsigned uf, unsigned ug)
  */
 unsigned floatNegate(unsigned uf)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    if (expo_f == 0xFF && mtsa_f) {
+        return uf;
+    }
+    else {
+        return uf ^ (1 << 31);
+    }
 }
 
 /*
@@ -671,7 +757,28 @@ unsigned floatPower2(int x)
  */
 unsigned floatScale1d2(unsigned uf)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    int sign_f = (uf >> 31 & 0x1);
+    if (expo_f == 0xFF) {//If uf is nan or infinite
+        return uf;
+    }
+    else if (!expo_f && !mtsa_f) { //If uf == 0
+        return uf;
+    }
+    else if (!expo_f) { // If uf is denormalized number
+        mtsa_f >>= 1;
+        return (uf & 0xFF800000u) | (mtsa_f);
+    }
+    else if (expo_f == 1) { 
+        mtsa_f >>= 1;
+        mtsa_f |= (1 << 22);
+        return sign_f << 31 | (0x807FFFFFu & mtsa_f);
+    }
+    else { //If uf is a normalize number
+        expo_f--;
+        return (uf & 0x807FFFFFu) | (expo_f << 23);
+    }
 }
 
 /*
@@ -730,7 +837,7 @@ unsigned floatUnsigned2Float(unsigned u)
  */
 int getByte(int x, int n)
 {
-    return 42;
+    return x & (0xFF << (n << 3));
 }
 
 /*
@@ -813,7 +920,8 @@ int isAsciiDigit(int x)
  */
 int isEqual(int x, int y)
 {
-    return 42;
+    x = x ^ y;
+    return !x;
 }
 
 /*
@@ -837,7 +945,7 @@ int isGreater(int x, int y)
  */
 int isLess(int x, int y)
 {
-    return 42;
+    return isGreater(y, x);
 }
 
 /*
@@ -886,7 +994,13 @@ int isNonNegative(int x)
  */
 int isNonZero(int x)
 {
-    return 42;
+    x |= x << 1;
+    x |= x << 2;
+    x |= x << 4;
+    x |= x << 8;
+    x |= x << 16;
+    x >>= 31;
+    return x & 1;
 }
 
 /*
@@ -898,7 +1012,7 @@ int isNonZero(int x)
  */
 int isNotEqual(int x, int y)
 {
-    return 42;
+    return !!(x ^ y);
 }
 
 /*
@@ -922,7 +1036,8 @@ int isPallindrome(int x)
  */
 int isPositive(int x)
 {
-    return 42;
+    x >>= 31;
+    return !(x & 0x1);
 }
 
 /*
@@ -935,7 +1050,8 @@ int isPositive(int x)
  */
 int isPower2(int x)
 {
-    return 42;
+    int y = x >> 31;
+    return !(bitCount(x) ^ 0x1 ^ y);
 }
 
 /*
@@ -947,7 +1063,8 @@ int isPower2(int x)
  */
 int isTmax(int x)
 {
-    return 42;
+    int y = ~(1 << 31);
+    return !(x ^ y);
 }
 
 /*
@@ -959,7 +1076,8 @@ int isTmax(int x)
  */
 int isTmin(int x)
 {
-    return 42;
+    int y = (1 << 31);
+    return !(x ^ y);
 }
 
 /*
@@ -971,7 +1089,7 @@ int isTmin(int x)
  */
 int isZero(int x)
 {
-    return 42;
+    return !x;
 }
 
 /*
@@ -1010,7 +1128,14 @@ int leftBitCount(int x)
  */
 int logicalNeg(int x)
 {
-    return 42;
+    x |= x << 16;
+    x |= x << 8;
+    x |= x << 4;
+    x |= x << 2;
+    x |= x << 1;
+    x >>= 31;
+    x &= 1;
+    return x ^ 0x1;
 }
 
 /*
@@ -1023,7 +1148,11 @@ int logicalNeg(int x)
  */
 int logicalShift(int x, int n)
 {
-    return 42;
+    int mask = 1 << 31;
+    mask >>= n;
+    mask <<= 1;
+    mask = ~mask;
+    return (x >> n) & mask;
 }
 
 /*
@@ -1056,7 +1185,7 @@ int minimumOfTwo(int x, int y)
  */
 int minusOne(void)
 {
-    return 42;
+    return ~0;
 }
 
 /*
@@ -1084,7 +1213,7 @@ int multFiveEighths(int x)
  */
 int negate(int x)
 {
-    return 42;
+    return ~x + 1;
 }
 
 /*
@@ -1095,7 +1224,7 @@ int negate(int x)
  */
 int oddBits(void)
 {
-    return 42;
+    return evenBits() << 1;
 }
 
 /*
@@ -1135,7 +1264,10 @@ int replaceByte(int x, int n, int c)
  */
 int rotateLeft(int x, int n)
 {
-    return 42;
+    int mask = (1 << 31);
+    mask >>= n;
+    mask <<= 1;
+    return (x & mask);
 }
 
 /*
@@ -1266,7 +1398,7 @@ int thirdBits(void)
  */
 int tmax(void)
 {
-    return 42;
+    return ~(1 << 31);
 }
 
 /*
@@ -1277,7 +1409,7 @@ int tmax(void)
  */
 int tmin(void)
 {
-    return 42;
+    return (1 << 31);
 }
 
 /*
@@ -1334,5 +1466,8 @@ int twosComp2SignMag(int x)
  */
 int upperBits(int n)
 {
-    return 42;
+    int x = (1 << 31);
+    x >>= n;
+    x <<= 1;
+    return x;
 }
