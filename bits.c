@@ -620,7 +620,39 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatInt2Float(int x)
 {
-    return 42;
+    int sign_x = x & 0x80000000u;
+    if (x == 0){
+        return x;
+    }
+    else if (x == sign_x) {
+        return 0xCF000000;
+    }
+    else {
+        x = absVal(x);
+        int expo = countLeadingZero(x);
+        expo = 31 - expo;
+        if (expo > 23) {
+            int mask = ~0;
+            mask += (1 << (expo - 23));
+            //printf("%d\n",expo - 23);
+            //printf("%x\n",mask);
+            if (!!(mask & x)) {
+                x = 0;
+                if (!!sign_x)
+                    expo--;
+                else
+                    expo++;
+            }
+            else {
+                x >>= (expo - 23);
+            }
+        }
+        else {
+            x <<= (23 - expo);
+        }
+        x &= ~(1 << 23);
+        return sign_x | x | (expo + 127) << 23;
+    }
 }
 
 /*
@@ -636,7 +668,7 @@ unsigned floatInt2Float(int x)
  */
 int floatIsEqual(unsigned uf, unsigned ug)
 {
-    int expo_f = (uf >> 23 & 0xFF);
+    /*int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     //int sign_f = (uf >> 31 & 0x1);
     int expo_g = (ug >> 23 & 0xFF);
@@ -650,7 +682,8 @@ int floatIsEqual(unsigned uf, unsigned ug)
     }
     else {
         return !(uf ^ ug);
-    }
+    }*/
+    return 42;
 }
 
 /*
@@ -666,7 +699,7 @@ int floatIsEqual(unsigned uf, unsigned ug)
  */
 int floatIsLess(unsigned uf, unsigned ug)
 {
-    int expo_f = (uf >> 23 & 0xFF);
+    /*int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
     int expo_g = (ug >> 23 & 0xFF);
@@ -699,7 +732,8 @@ int floatIsLess(unsigned uf, unsigned ug)
         else {
             return sign_f ^ (mtsa_f < mtsa_g);
         }
-    }
+    }*/
+    return 42;
 }
 
 /*
@@ -767,7 +801,11 @@ unsigned floatScale1d2(unsigned uf)
         return uf;
     }
     else if (!expo_f) { // If uf is denormalized number
-        mtsa_f >>= 1;
+        int i = mtsa_f & 0x1;
+        if (i && sign_f)
+            mtsa_f = (mtsa_f >> 1) + 1;
+        else 
+            mtsa_f >>= 1;
         return (uf & 0xFF800000u) | (mtsa_f);
     }
     else if (expo_f == 1) { 
@@ -850,7 +888,12 @@ int getByte(int x, int n)
  */
 int greatestBitPos(int x)
 {
-    return 42;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return ~(x ^ ((~x) >> 1 | (1 << 31)));
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -867,7 +910,9 @@ int greatestBitPos(int x)
  */
 int howManyBits(int x)
 {
-    return 0;
+    x += ~(x >> 31) + 1;
+    x = absVal(x);
+    return (32 - countLeadingZero(x)) + 1;
 }
 
 /*
@@ -881,7 +926,7 @@ int howManyBits(int x)
  */
 int implication(int x, int y)
 {
-    return 42;
+    return !(!x | !y) | !x;
 }
 
 /*
@@ -893,7 +938,38 @@ int implication(int x, int y)
  */
 int intLog2(int x)
 {
-    return 42;
+    int i, j, k, l, m;
+    x = x | (x >> 1);
+    x = x | (x >> 2);
+    x = x | (x >> 4);
+    x = x | (x >> 8);
+    x = x | (x >> 16);
+
+    // i = 0x55555555 
+    i = 0x55 | (0x55 << 8); 
+    i = i | (i << 16);
+
+    // j = 0x33333333 
+    j = 0x33 | (0x33 << 8);
+    j = j | (j << 16);
+
+    // k = 0x0f0f0f0f 
+    k = 0x0f | (0x0f << 8);
+    k = k | (k << 16);
+
+    // l = 0x00ff00ff 
+    l = 0xff | (0xff << 16);
+
+    // m = 0x0000ffff 
+    m = 0xff | (0xff << 8);
+
+    x = (x & i) + ((x >> 1) & i);
+    x = (x & j) + ((x >> 2) & j);
+    x = (x & k) + ((x >> 4) & k);
+    x = (x & l) + ((x >> 8) & l);
+    x = (x & m) + ((x >> 16) & m);
+    x = x + ~0;
+    return x; 
 }
 
 /*
@@ -908,7 +984,13 @@ int intLog2(int x)
  */
 int isAsciiDigit(int x)
 {
-    return 42;
+    int lower = 0x2F;
+    int higher = 0x3a;
+    int y = x + ~lower + 1;
+    int z = higher + ~x + 1;
+    y >>= 31;
+    z >>= 31;
+    return !(y & z);
 }
 
 /*
@@ -931,9 +1013,19 @@ int isEqual(int x, int y)
  *   Max ops: 24
  *   Rating: 3
  */
-int isGreater(int x, int y)
+int isGreater(int x, int y) //Comes from stackoverflow 
 {
-    return 42;
+    int diff = x ^ y;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (x ^ 0x80000000) & (y ^ 0x7fffffff);
+
+    return !!diff;
 }
 
 /*
@@ -957,7 +1049,7 @@ int isLess(int x, int y)
  */
 int isLessOrEqual(int x, int y)
 {
-    return 42;
+    return isLess(x, y) | !(x ^ y);
 }
 
 /*
@@ -969,7 +1061,7 @@ int isLessOrEqual(int x, int y)
  */
 int isNegative(int x)
 {
-    return 42;
+    return isGreater(0, x);
 }
 
 /*
@@ -981,7 +1073,7 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    return 42;
+    return isLessOrEqual(0,x);
 }
 
 /*
@@ -1024,7 +1116,7 @@ int isNotEqual(int x, int y)
  */
 int isPallindrome(int x)
 {
-    return 42;
+    return !(x ^ bitReverse(x));
 }
 
 /*
@@ -1036,8 +1128,7 @@ int isPallindrome(int x)
  */
 int isPositive(int x)
 {
-    x >>= 31;
-    return !(x & 0x1);
+    return isGreater(x, 0);
 }
 
 /*
@@ -1102,7 +1193,12 @@ int isZero(int x)
  */
 int leastBitPos(int x)
 {
-    return 42;
+    x |= x << 1;
+    x |= x << 2;
+    x |= x << 4;
+    x |= x << 8;
+    x |= x << 16;
+    return ~(x ^ (~x << 1 | 1));
 }
 
 /*
@@ -1115,7 +1211,7 @@ int leastBitPos(int x)
  */
 int leftBitCount(int x)
 {
-    return 42;
+    return countLeadingZero(~x);
 }
 
 /*
@@ -1237,7 +1333,8 @@ int oddBits(void)
  */
 int remainderPower2(int x, int n)
 {
-    return 42;
+    x += ~(dividePower2(x, n) << n) + 1;
+    return x;
 }
 
 /*
@@ -1251,7 +1348,10 @@ int remainderPower2(int x, int n)
  */
 int replaceByte(int x, int n, int c)
 {
-    return 42;
+    int mask = 0xFF << (n << 3);
+    x &= ~mask;
+    x |= c << (n << 3);
+    return x;
 }
 
 /*
@@ -1264,10 +1364,10 @@ int replaceByte(int x, int n, int c)
  */
 int rotateLeft(int x, int n)
 {
-    int mask = (1 << 31);
-    mask >>= n;
+    int mask = (1 << 31);//Produce mask
+    mask >>= 32 + ~n + 1;
     mask <<= 1;
-    return (x & mask);
+    return ((x << n & mask) | (x >> (32 + ~n + 1) & ~mask));
 }
 
 /*
@@ -1280,7 +1380,10 @@ int rotateLeft(int x, int n)
  */
 int rotateRight(int x, int n)
 {
-    return 42;
+    int mask = (1 << 31);//Produce mask
+    mask >>= n;
+    mask <<= 1;
+     return ((x >> n & ~mask) | (x << (32 + ~n + 1) & mask));
 }
 
 /*
@@ -1295,7 +1398,11 @@ int rotateRight(int x, int n)
  */
 int satAdd(int x, int y)
 {
-    return 42;
+    int sign_x = x >> 31, sign_y = y >> 31;
+    int z = x + y;
+    int sign_z = z >> 31;
+    int msk = (sign_x & sign_y & ~sign_z) | (~sign_x & ~sign_y & sign_z);//++-, --+ are not allowed
+    return (sign_x & sign_y & ~sign_z & (1 << 31)) | (~sign_x & ~sign_y & sign_z & ~(1 << 31)) | (~msk & z);
 }
 
 /*
@@ -1309,7 +1416,10 @@ int satAdd(int x, int y)
  */
 int satMul2(int x)
 {
-    return 42;
+    int sign_x = x >> 31;
+    int z = x << 1, sign_z = z >> 31;
+    int msk = (sign_x & ~sign_z) | (~sign_x & sign_z);//+-, -+ are not allowed.
+    return (sign_x & ~sign_z & (1 << 31)) | (~sign_x & sign_z & ~(1 << 31)) | (~msk & z); 
 }
 
 /*
@@ -1325,7 +1435,12 @@ int satMul2(int x)
  */
 int satMul3(int x)
 {
-    return 42;
+    int sign_x = x >> 31;
+    int sign_2x = (x << 1) >> 31;
+    int z = (x << 1) + x, sign_z = z >> 31;
+    int msk = ((sign_x & ~sign_z) | (sign_x & ~sign_2x)) | ((~sign_x & sign_z) | (~sign_x & sign_2x));
+    return (((sign_x & ~sign_z) | (sign_x & ~sign_2x)) & (1 << 31)) | 
+        (((~sign_x & sign_z) | (~sign_x & sign_2x)) & ~(1 << 31)) | (~msk & z); 
 }
 
 /*
@@ -1338,7 +1453,14 @@ int satMul3(int x)
  */
 int sign(int x)
 {
-    return 42;
+    int msk = x, sign_x = x >> 31;//If x == 0, mask = 0. If x != 0. mask = ~0;
+    msk |= msk << 1;
+    msk |= msk << 2;
+    msk |= msk << 4;
+    msk |= msk << 8;
+    msk |= msk << 16;
+    msk >>= 31;
+    return (sign_x | (~sign_x & 1)) & msk;
 }
 
 /*
@@ -1351,7 +1473,11 @@ int sign(int x)
  */
 int signMag2TwosComp(int x)
 {
-    return 42;
+    int mask = 1 << 31;
+    int sign_x = x >> 31;
+    int y = x & ~mask;
+    y = (y + sign_x) ^ sign_x;
+    return y;
 }
 
 /*
@@ -1362,7 +1488,9 @@ int signMag2TwosComp(int x)
  */
 int specialBits(void)
 {
-    return 42;
+    int a = 0xC, b = 0x5, c=0x3;
+    int x = (a << 12 | b << 16 ) | c << 20;
+    return ~x;
 }
 
 /*
@@ -1375,7 +1503,9 @@ int specialBits(void)
  */
 int subtractionOK(int x, int y)
 {
-    return 42;
+    int sign_x = x >> 31, sign_y = y >> 31;
+    int z = x + ~y + 1, sign_z = z >> 31;
+    return !!(~sign_x & sign_y & ~sign_z) | !!(sign_x & ~sign_y & sign_z) | !!(~(sign_x ^ sign_y));// +-+, -+-, ++x, --x are allowed
 }
 
 /*
@@ -1387,7 +1517,8 @@ int subtractionOK(int x, int y)
  */
 int thirdBits(void)
 {
-    return 42;
+    int a = 0x49; 
+    return (((a << 27) | (a << 18) | (a << 9) | a));
 }
 
 /*
@@ -1424,6 +1555,7 @@ int tmin(void)
  */
 int trueFiveEighths(int x)
 {
+
     return 42;
 }
 
