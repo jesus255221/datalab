@@ -699,7 +699,7 @@ int floatIsEqual(unsigned uf, unsigned ug)
  */
 int floatIsLess(unsigned uf, unsigned ug)
 {
-    /*int expo_f = (uf >> 23 & 0xFF);
+    int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
     int expo_g = (ug >> 23 & 0xFF);
@@ -732,8 +732,7 @@ int floatIsLess(unsigned uf, unsigned ug)
         else {
             return sign_f ^ (mtsa_f < mtsa_g);
         }
-    }*/
-    return 42;
+    }
 }
 
 /*
@@ -783,7 +782,7 @@ unsigned floatPower2(int x)
         expo_f = 0;
     }
     else {
-        expo = x + 127;
+        expo_f = x + 127;
     }
     return expo_f << 23;
 }
@@ -852,10 +851,10 @@ unsigned floatScale2(unsigned uf)
         return uf;
     }
     else if (!expo_f) {// if the number is a denormalized number
-        mtsa <<= 1;// The left most bit will automatically be integrate into expo_t
+        mtsa_f <<= 1;// The left most bit will automatically be integrate into expo_t
     }
     else if (expo_f - 128 == 127){ //The number bbefore infinite
-        mtsa = 0;
+        mtsa_f = 0;
         expo_f++;
     }
     else {
@@ -877,7 +876,7 @@ unsigned floatScale2(unsigned uf)
  */
 unsigned floatScale64(unsigned uf)
 {
-    nt expo_f = (uf >> 23 & 0xFF);
+    int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
     if (expo_f == 0xFF) { // If the number is nan or infinite
@@ -887,10 +886,10 @@ unsigned floatScale64(unsigned uf)
         return uf;
     }
     else if (!expo_f) {// if the number is a denormalized number
-        mtsa <<= 1;// The left most bit will automatically be integrate into expo_t
+        mtsa_f <<= 1;// The left most bit will automatically be integrate into expo_t
     }
     else if (expo_f - 128 == 127){ //The number bbefore infinite
-        mtsa = 0;
+        mtsa_f = 0;
         expo_f++;
     }
     else {
@@ -1606,12 +1605,12 @@ int trueFiveEighths(int x)
 {
     int remainder = 0, sign_x = x >> 31, mask = 0x7, true_remainder = 0;
     remainder = x & mask;//The mask for taking remainder
-    remainder = remainder << 2 + remainder;//The true remainder
+    remainder = (remainder << 2) + remainder;//The true remainder
     true_remainder = remainder & mask;
     remainder >>= 3;
     int answer = x >> 3;
     answer = answer + answer + answer + answer + answer;
-    return answer + ;
+    return answer + remainder + (sign_x & !!true_remainder);
 }
 
 /*
@@ -1628,7 +1627,7 @@ int trueThreeFourths(int x)
 {
     int remainder = 0, sign_x = x >> 31, mask = 0x3, true_remainder = 0;
     remainder = x & mask;//The mask for taking remainder
-    remainder = remainder << 2 + ~remainder + 1;//The true remainder
+    remainder = (remainder << 2) + ~remainder + 1;//The true remainder
     true_remainder = remainder & mask;
     remainder >>= 2;
     int answer = x >> 2;
