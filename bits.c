@@ -775,7 +775,18 @@ unsigned floatNegate(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    int sign_f = (uf >> 31 & 0x1);
+    if (x > 127) {
+        expo_f = 0xFF;
+    }
+    else if (x < -127){
+        expo_f = 0;
+        mtsa_f = 0;
+    }
+    else if ()
+    return (sign_f << 31 & expo_f << 23) & mtsa_f;
 }
 
 /*
