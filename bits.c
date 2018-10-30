@@ -443,7 +443,29 @@ int countLeadingZero(int x)
     x = x | x >> 8;
     x = x | x >> 16;
     x = ~x;
-    return bitCount(x);  // Calculate the left zeros
+    int y = 0, count = 0;
+    const int a = 0x55, b = 0x33, c = 0x0F, mask = 0xFF;
+    y = x & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 8 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 16 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 24 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    return count;  // Calculate the left zeros
 }
 
 /*
@@ -455,7 +477,8 @@ int countLeadingZero(int x)
  */
 int copyLSB(int x)
 {
-    return bitReverse(x) >>
+    x <<= 31;
+    return x >>
            31;  // Reverse it and use sign extension to construct the number
 }
 
@@ -518,7 +541,9 @@ int evenBits(void)
 int ezThreeFourths(int x)
 {
     int y = x + x + x;
-    return dividePower2(y, 2);
+    int mask = ~0;                             // Construct 0xFFFFFFFF
+    mask = ~(mask << 2);                       // Construct a mask
+    return (y >> 2) + !!(y & mask & y >> 31);  // If x is minus number and there
 }
 
 /*
@@ -534,7 +559,7 @@ int fitsBits(int x, int n)
 {
     int sign_x = x >> 31;
     x = x + (~sign_x + 1);
-    x = absVal(x);
+    x = (x + sign_x) ^ sign_x;
     n = n + ~0;  // n--
     return !(x >> n);
 }
@@ -549,7 +574,11 @@ int fitsBits(int x, int n)
  */
 int fitsShort(int x)
 {
-    return fitsBits(x, 16);
+    int n = 16, sign_x = x >> 31;
+    x = x + (~sign_x + 1);
+    x = (x + sign_x) ^ sign_x;
+    n = n + ~0;  // n--
+    return !(x >> n);
 }
 
 /*
@@ -628,30 +657,42 @@ unsigned floatInt2Float(int x)
     int sign_x = x & 0x80000000u;
     if (x == 0) {
         return x;
-    } else if (x == sign_x) {
+    } else if (x == sign_x) {  // x is the least number in the integer
         return 0xCF000000;
     } else {
-        x = absVal(x);
-        int expo = countLeadingZero(x);
-        expo = 31 - expo;
-        if (expo > 23) {
+        if (x < 0) {
+            x = -x;
+        }
+        int expo = -1;
+        int y = x;
+        while (!!y) {
+            y >>= 1;
+            expo++;
+        }
+        // printf("%d\n",expo);
+        if (expo > 23) {  // if x >= 2 ^ 25 or x <= -2 ^ 25, it can no longer be
+                          // represented by float thoroughly.
             int mask = ~0;
-            mask += (1 << (expo - 23));
-            // printf("%d\n",expo - 23);
-            // printf("%x\n",mask);
-            if (!!(mask & x)) {
-                x = 0;
-                if (!!sign_x)
-                    expo--;
-                else
+            mask <<= expo - 23;
+            int remainder = (~mask & x);
+            x >>= expo - 23;  // Shift the number
+            // printf("%x\n",x);
+            if (remainder > (1 << (expo - 24))) {
+                x++;
+            } else if (remainder == (1 << (expo - 24))) {
+                x += (x & 1);
+            }
+            if (x >= (1 << 24)) {
+                while (x >= (1 << 24)) {
+                    x >>= 1;
                     expo++;
-            } else {
-                x >>= (expo - 23);
+                }
             }
         } else {
             x <<= (23 - expo);
+            // printf("%x\n",x);
         }
-        x &= ~(1 << 23);
+        x &= ~(0x800000);  // Zero out the 24th bit
         return sign_x | x | (expo + 127) << 23;
     }
 }
@@ -795,14 +836,10 @@ unsigned floatScale1d2(unsigned uf)
     } else if (!expo_f && !mtsa_f) {  // If uf == 0
         return uf;
     } else if (!expo_f) {  // If uf is denormalized number
-        int i = mtsa_f & 0x1;
-        if (i && sign_f)
-            mtsa_f = (mtsa_f >> 1) + 1;
-        else
-            mtsa_f >>= 1;
+        mtsa_f = (mtsa_f >> 1) + ((mtsa_f & 1) & (mtsa_f >> 1 & 1));
         return (uf & 0xFF800000u) | (mtsa_f);
     } else if (expo_f == 1) {  // If it is the least normalized number
-        mtsa_f >>= 1;
+        mtsa_f = (mtsa_f >> 1) + ((mtsa_f & 1) & (mtsa_f >> 1 & 1));
         mtsa_f |= (1 << 22);
         return sign_f << 31 | (0x807FFFFFu & mtsa_f);
     } else {  // If uf is a normalize number
@@ -894,7 +931,42 @@ unsigned floatScale64(unsigned uf)
  */
 unsigned floatUnsigned2Float(unsigned u)
 {
-    return 42;
+    if (u == 0) {
+        return u;
+    } else {
+        int expo = -1;
+        unsigned y = u;
+        while (!!y) {
+            y >>= 1;
+            expo++;
+        }
+        // printf("%d\n",expo);
+        if (expo > 23) {  // if x >= 2 ^ 25 or x <= -2 ^ 25, it can no longer be
+                          // represented by float thoroughly.
+            int mask = ~0;
+            mask <<= expo - 23;
+            int remainder = (~mask & u);
+            u >>= expo - 23;  // Shift the number
+            // printf("%x\n",x);
+            if (remainder > (1 << (expo - 24))) {
+                u++;
+            } else if (remainder ==
+                       (1 << (expo - 24))) {  // If the remainder is half of the
+                                              // least bit in the number
+                u += (u & 1);
+            }
+            if (u >= (1 << 24)) {
+                while (u >= (1 << 24)) {
+                    u >>= 1;
+                    expo++;
+                }
+            }
+        } else {
+            u <<= (23 - expo);
+        }
+        u &= ~(0x800000);  // Zero out the 24th bit
+        return u | (expo + 127) << 23;
+    }
 }
 
 /*
@@ -943,8 +1015,39 @@ int greatestBitPos(int x)
 int howManyBits(int x)
 {
     x += ~(x >> 31) + 1;
-    x = absVal(x);
-    return (32 - countLeadingZero(x)) + 1;
+    int z = x >> 31;
+    x = (x + z) ^ z;
+    x = x | x >> 1;  // Fill ones to the LSB
+    x = x | x >> 2;
+    x = x | x >> 4;
+    x = x | x >> 8;
+    x = x | x >> 16;
+    x = ~x;
+
+    int y = 0, count = 0;
+    const int a = 0x55, b = 0x33, c = 0x0F, mask = 0xFF;
+    y = x & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 8 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 16 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 24 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+
+    return (32 - count) + 1;
 }
 
 /*
@@ -1070,7 +1173,16 @@ int isLess(int x, int y)
  */
 int isLessOrEqual(int x, int y)
 {
-    return isLess(x, y) | !(x ^ y);
+    int diff = x ^ y;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (y ^ 0x80000000) & (x ^ 0x7fffffff);
+    return !!diff | !(x ^ y);
 }
 
 /*
@@ -1082,7 +1194,17 @@ int isLessOrEqual(int x, int y)
  */
 int isNegative(int x)
 {
-    return isGreater(0, x);
+    int diff = 0 ^ x;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (0 ^ 0x80000000) & (x ^ 0x7fffffff);
+
+    return !!diff;
 }
 
 /*
@@ -1094,7 +1216,16 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    return isLessOrEqual(0, x);
+    int diff = 0 ^ x;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (x ^ 0x80000000) & (0 ^ 0x7fffffff);
+    return !!diff | !(0 ^ x);
 }
 
 /*
@@ -1137,7 +1268,27 @@ int isNotEqual(int x, int y)
  */
 int isPallindrome(int x)
 {
-    return !(x ^ bitReverse(x));
+    int y = x;
+    // m1 suggests mask 1 and so on
+    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa,
+        m2 = m1 >> 1;  // 0xaaaaaaaa, 0x55555555
+    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc,
+        m4 = m3 >> 2;  // 0xcccccccc, 0x33333333
+    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0,
+        m6 = m5 >> 4;  // 0xf0f0f0f0, 0xf0f0f0f0
+    int m7 = 0xff << 24 | 0x00 << 16 | 0xff << 8 | 0x00,
+        m8 = m7 >> 8;  // 0xff00ff00, 0x00ff00ff
+    int m9 = (1 << 31) >> 15, m10 = ~m9;
+    int a = 1 << 31;
+    y = (((y & m1) >> 1 & ~a) | (y & m2) << 1);
+    a >>= 1;
+    y = (((y & m3) >> 2 & ~a) | (y & m4) << 2);
+    a >>= 2;
+    y = (((y & m5) >> 4 & ~a) | (y & m6) << 4);
+    a >>= 4;
+    y = (((y & m7) >> 8 & ~a) | (y & m8) << 8);
+    a >>= 8;
+    return !(x ^ (((y & m9) >> 16 & ~a) | (y & m10) << 16));
 }
 
 /*
@@ -1164,7 +1315,17 @@ int isAsciiDigit(int x)
  */
 int isPositive(int x)
 {
-    return isGreater(x, 0);
+    int diff = x ^ 0;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (x ^ 0x80000000) & (0 ^ 0x7fffffff);
+
+    return !!diff;
 }
 
 /*
