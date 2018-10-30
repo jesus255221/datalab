@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 /*
  * Modified CS:APP Data Lab
  *
@@ -355,10 +355,14 @@ int bitReverse(int x)
 {
     int y = x;
     // m1 suggests mask 1 and so on
-    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa, m2 = m1 >> 1; // 0xaaaaaaaa, 0x55555555
-    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc, m4 = m3 >> 2; // 0xcccccccc, 0x33333333
-    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0, m6 = m5 >> 4; // 0xf0f0f0f0, 0xf0f0f0f0
-    int m7 = 0xff << 24 | 0x00 << 16 | 0xff << 8 | 0x00, m8 = m7 >> 8; // 0xff00ff00, 0x00ff00ff
+    int m1 = 0xaa << 24 | 0xaa << 16 | 0xaa << 8 | 0xaa,
+        m2 = m1 >> 1;  // 0xaaaaaaaa, 0x55555555
+    int m3 = 0xcc << 24 | 0xcc << 16 | 0xcc << 8 | 0xcc,
+        m4 = m3 >> 2;  // 0xcccccccc, 0x33333333
+    int m5 = 0xf0 << 24 | 0xf0 << 16 | 0xf0 << 8 | 0xf0,
+        m6 = m5 >> 4;  // 0xf0f0f0f0, 0xf0f0f0f0
+    int m7 = 0xff << 24 | 0x00 << 16 | 0xff << 8 | 0x00,
+        m8 = m7 >> 8;  // 0xff00ff00, 0x00ff00ff
     int m9 = (1 << 31) >> 15, m10 = ~m9;
     int a = 1 << 31;
     y = (((y & m1) >> 1 & ~a) | (y & m2) << 1);
@@ -396,7 +400,9 @@ int bitXor(int x, int y)
 int byteSwap(int x, int n, int m)
 {
     int n_value = x >> (n << 3) & 0xFF, m_value = x >> (m << 3) & 0xFF;
-    int mask = ~(0xFF << (n << 3) | (0xFF << (m << 3)));// Construct a mask to zero the swap bytes
+    int mask =
+        ~(0xFF << (n << 3) |
+          (0xFF << (m << 3)));  // Construct a mask to zero the swap bytes
     x = x & mask;
     x = x | (n_value << (m << 3)) | (m_value << (n << 3));
     return x;
@@ -416,7 +422,7 @@ int conditional(int x, int y, int z)
     x = x | x << 4;
     x = x | x << 8;
     x = x | x << 16;
-    x = x >> 31; //Sign extension if any bits are one
+    x = x >> 31;  // Sign extension if any bits are one
     return (x & y) | (~x & z);
 }
 
@@ -431,13 +437,13 @@ int conditional(int x, int y, int z)
  */
 int countLeadingZero(int x)
 {
-    x = x | x >> 1;//Fill ones to the LSB
+    x = x | x >> 1;  // Fill ones to the LSB
     x = x | x >> 2;
     x = x | x >> 4;
     x = x | x >> 8;
     x = x | x >> 16;
     x = ~x;
-    return bitCount(x);//Calculate the left zeros
+    return bitCount(x);  // Calculate the left zeros
 }
 
 /*
@@ -449,7 +455,8 @@ int countLeadingZero(int x)
  */
 int copyLSB(int x)
 {
-    return bitReverse(x) >> 31;// Reverse it and use sign extension to construct the number
+    return bitReverse(x) >>
+           31;  // Reverse it and use sign extension to construct the number
 }
 
 /*
@@ -461,7 +468,7 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    int y = x ^ (~x + 1);// x xor -x
+    int y = x ^ (~x + 1);  // x xor -x
     return !!y;
 }
 
@@ -475,9 +482,10 @@ int distinctNegation(int x)
  */
 int dividePower2(int x, int n)
 {
-    int mask = ~0;// Construct 0xFFFFFFFF
-    mask = ~(mask << n);// Construct a mask 
-    return (x >> n) + !!(x & mask & x >> 31); // If x is minus number and there are ones under nth bits
+    int mask = ~0;                             // Construct 0xFFFFFFFF
+    mask = ~(mask << n);                       // Construct a mask
+    return (x >> n) + !!(x & mask & x >> 31);  // If x is minus number and there
+                                               // are ones under nth bits
 }
 
 /*
@@ -527,7 +535,7 @@ int fitsBits(int x, int n)
     int sign_x = x >> 31;
     x = x + (~sign_x + 1);
     x = absVal(x);
-    n = n + ~0;// n--
+    n = n + ~0;  // n--
     return !(x >> n);
 }
 
@@ -559,10 +567,9 @@ unsigned floatAbsVal(unsigned uf)
 {
     int x = (uf >> 23 & 0xFF);
     int y = !!(uf & 0x7FFFFF);
-    if ( x == 0xFF && y ){
+    if (x == 0xFF && y) {
         return uf;
-    }
-    else {
+    } else {
         uf <<= 1;
         uf >>= 1;
         return uf;
@@ -588,22 +595,20 @@ int floatFloat2Int(unsigned uf)
     int sign = (uf >> 31 & 0x1);
     if (expo == 0xFF || (expo - 127) > 30) {
         return 0x80000000u;
-    }
-    else if ((expo - 127) < 0){
+    } else if ((expo - 127) < 0) {
         return 0;
-    }
-    else {
+    } else {
         mtsa |= (1 << 23);
         if ((expo - 127) >= 23)
             if (sign)
                 return -1 * (mtsa) << (expo - 127 - 23);
-            else 
+            else
                 return (mtsa) << (expo - 127 - 23);
         else {
             int mask = mtsa << (32 - (150 - expo));
             if (sign)
                 return (-1 * (mtsa) >> (150 - expo)) + !!(mask);
-            else 
+            else
                 return (mtsa) >> (150 - expo);
         }
     }
@@ -621,33 +626,29 @@ int floatFloat2Int(unsigned uf)
 unsigned floatInt2Float(int x)
 {
     int sign_x = x & 0x80000000u;
-    if (x == 0){
+    if (x == 0) {
         return x;
-    }
-    else if (x == sign_x) {
+    } else if (x == sign_x) {
         return 0xCF000000;
-    }
-    else {
+    } else {
         x = absVal(x);
         int expo = countLeadingZero(x);
         expo = 31 - expo;
         if (expo > 23) {
             int mask = ~0;
             mask += (1 << (expo - 23));
-            //printf("%d\n",expo - 23);
-            //printf("%x\n",mask);
+            // printf("%d\n",expo - 23);
+            // printf("%x\n",mask);
             if (!!(mask & x)) {
                 x = 0;
                 if (!!sign_x)
                     expo--;
                 else
                     expo++;
-            }
-            else {
+            } else {
                 x >>= (expo - 23);
             }
-        }
-        else {
+        } else {
             x <<= (23 - expo);
         }
         x &= ~(1 << 23);
@@ -668,22 +669,17 @@ unsigned floatInt2Float(int x)
  */
 int floatIsEqual(unsigned uf, unsigned ug)
 {
-    /*int expo_f = (uf >> 23 & 0xFF);
+    int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
-    //int sign_f = (uf >> 31 & 0x1);
     int expo_g = (ug >> 23 & 0xFF);
     int mtsa_g = (ug & 0x7FFFFF);
-    //int sign_g = (ug >> 31 & 0x1);
-    if ( expo_f == 0xFF && expo_g == 0xFF && !!mtsa_f && !!mtsa_g){
+    if (expo_f == 0xFF && expo_g == 0xFF && !!mtsa_f && !!mtsa_g) {
         return 0;
-    }
-    else if( !expo_f && !expo_g && !mtsa_f && !mtsa_g ) {
+    } else if (!expo_f && !expo_g && !mtsa_f && !mtsa_g) {
         return 1;
-    }
-    else {
+    } else {
         return !(uf ^ ug);
-    }*/
-    return 42;
+    }
 }
 
 /*
@@ -705,31 +701,25 @@ int floatIsLess(unsigned uf, unsigned ug)
     int expo_g = (ug >> 23 & 0xFF);
     int mtsa_g = (ug & 0x7FFFFF);
     int sign_g = (ug >> 31 & 0x1);
-    if ((expo_f == 0xFF && mtsa_f) || (expo_g == 0xFF && mtsa_g)){
+    if ((expo_f == 0xFF && mtsa_f) || (expo_g == 0xFF && mtsa_g)) {
         return 0;
-    }
-    else if((!expo_f && !mtsa_f) || (!expo_g && !mtsa_g)) {//If any of the two numbers is zero
-        if ((!expo_f && !mtsa_f) && (!expo_g && !mtsa_g)){//Both zero
+    } else if ((!expo_f && !mtsa_f) ||
+               (!expo_g && !mtsa_g)) {  // If any of the two numbers is zero
+        if ((!expo_f && !mtsa_f) && (!expo_g && !mtsa_g)) {  // Both zero
             return 0;
-        }
-        else if (!expo_f && !mtsa_f) {//First zero
+        } else if (!expo_f && !mtsa_f) {  // First zero
             return !sign_g;
+        } else {
+            return sign_f;  // Second zero
         }
-        else {
-            return sign_f;//Second zero
-        }
-    }
-    else if (sign_f != sign_g) {
+    } else if (sign_f != sign_g) {
         return sign_f > sign_g;
-    }
-    else if (expo_f != expo_g) {
+    } else if (expo_f != expo_g) {
         return sign_f ^ (expo_f < expo_g);
-    }
-    else {
-        if (mtsa_f == mtsa_g) {//The two numbers are the same
+    } else {
+        if (mtsa_f == mtsa_g) {  // The two numbers are the same
             return 0;
-        }
-        else {
+        } else {
             return sign_f ^ (mtsa_f < mtsa_g);
         }
     }
@@ -752,8 +742,7 @@ unsigned floatNegate(unsigned uf)
     int mtsa_f = (uf & 0x7FFFFF);
     if (expo_f == 0xFF && mtsa_f) {
         return uf;
-    }
-    else {
+    } else {
         return uf ^ (1 << 31);
     }
 }
@@ -777,11 +766,9 @@ unsigned floatPower2(int x)
     int expo_f;
     if (x > 127) {
         expo_f = 0xFF;
-    }
-    else if (x < -127){
+    } else if (x < -127) {
         expo_f = 0;
-    }
-    else {
+    } else {
         expo_f = x + 127;
     }
     return expo_f << 23;
@@ -803,26 +790,22 @@ unsigned floatScale1d2(unsigned uf)
     int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
-    if (expo_f == 0xFF) {//If uf is nan or infinite
+    if (expo_f == 0xFF) {  // If uf is nan or infinite
         return uf;
-    }
-    else if (!expo_f && !mtsa_f) { //If uf == 0
+    } else if (!expo_f && !mtsa_f) {  // If uf == 0
         return uf;
-    }
-    else if (!expo_f) { // If uf is denormalized number
+    } else if (!expo_f) {  // If uf is denormalized number
         int i = mtsa_f & 0x1;
         if (i && sign_f)
             mtsa_f = (mtsa_f >> 1) + 1;
-        else 
+        else
             mtsa_f >>= 1;
         return (uf & 0xFF800000u) | (mtsa_f);
-    }
-    else if (expo_f == 1) { //If it is the least normalized number
+    } else if (expo_f == 1) {  // If it is the least normalized number
         mtsa_f >>= 1;
         mtsa_f |= (1 << 22);
         return sign_f << 31 | (0x807FFFFFu & mtsa_f);
-    }
-    else { //If uf is a normalize number
+    } else {  // If uf is a normalize number
         expo_f--;
         return (uf & 0x807FFFFFu) | (expo_f << 23);
     }
@@ -844,20 +827,17 @@ unsigned floatScale2(unsigned uf)
     int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
-    if (expo_f == 0xFF) { // If the number is nan or infinite
+    if (expo_f == 0xFF) {  // If the number is nan or infinite
         return uf;
-    }
-    else if (!expo_f && !mtsa_f) {//If the number is zero
+    } else if (!expo_f && !mtsa_f) {  // If the number is zero
         return uf;
-    }
-    else if (!expo_f) {// if the number is a denormalized number
-        mtsa_f <<= 1;// The left most bit will automatically be integrate into expo_t
-    }
-    else if (expo_f - 128 == 127){ //The number bbefore infinite
+    } else if (!expo_f) {  // if the number is a denormalized number
+        mtsa_f <<=
+            1;  // The left most bit will automatically be integrate into expo_t
+    } else if (expo_f - 127 == 128) {  // The number bbefore infinite
         mtsa_f = 0;
         expo_f++;
-    }
-    else {
+    } else {
         expo_f++;
     }
     return sign_f << 31 | expo_f << 23 | mtsa_f;
@@ -879,21 +859,26 @@ unsigned floatScale64(unsigned uf)
     int expo_f = (uf >> 23 & 0xFF);
     int mtsa_f = (uf & 0x7FFFFF);
     int sign_f = (uf >> 31 & 0x1);
-    if (expo_f == 0xFF) { // If the number is nan or infinite
+    if (expo_f == 0xFF) {  // If the number is nan or infinite
         return uf;
-    }
-    else if (!expo_f && !mtsa_f) {//If the number is zero
+    } else if (!expo_f && !mtsa_f) {  // If the number is zero
         return uf;
-    }
-    else if (!expo_f) {// if the number is a denormalized number
-        mtsa_f <<= 1;// The left most bit will automatically be integrate into expo_t
-    }
-    else if (expo_f - 128 == 127){ //The number bbefore infinite
-        mtsa_f = 0;
-        expo_f++;
-    }
-    else {
-        expo_f++;
+    } else if (!expo_f) {  // if the number is a denormalized number
+        int i = 6;
+        while (!(mtsa_f & (1 << 23)) &&
+               i > 0) {    // While the 24th bit is not one
+            mtsa_f <<= 1;  // Keep shifting
+            i--;           // Record the shift number
+        }
+        if (i != 0) {
+            mtsa_f &= ~(1 << 23);  // Zero out the 23th bit
+            expo_f = i + 1;        // put the rest of exp into exponent position
+        }
+    } else if (expo_f - 127 >= 123) {  // The number before infinite
+        mtsa_f = 0;                    // Set to infinity
+        expo_f = 0xFF;
+    } else {
+        expo_f += 6;
     }
     return sign_f << 31 | expo_f << 23 | mtsa_f;
 }
@@ -922,7 +907,7 @@ unsigned floatUnsigned2Float(unsigned u)
  */
 int getByte(int x, int n)
 {
-    return x & (0xFF << (n << 3));
+    return x >> (n << 3) & 0xFF;
 }
 
 /*
@@ -992,22 +977,22 @@ int intLog2(int x)
     x = x | (x >> 8);
     x = x | (x >> 16);
 
-    // i = 0x55555555 
-    i = 0x55 | (0x55 << 8); 
+    // i = 0x55555555
+    i = 0x55 | (0x55 << 8);
     i = i | (i << 16);
 
-    // j = 0x33333333 
+    // j = 0x33333333
     j = 0x33 | (0x33 << 8);
     j = j | (j << 16);
 
-    // k = 0x0f0f0f0f 
+    // k = 0x0f0f0f0f
     k = 0x0f | (0x0f << 8);
     k = k | (k << 16);
 
-    // l = 0x00ff00ff 
+    // l = 0x00ff00ff
     l = 0xff | (0xff << 16);
 
-    // m = 0x0000ffff 
+    // m = 0x0000ffff
     m = 0xff | (0xff << 8);
 
     x = (x & i) + ((x >> 1) & i);
@@ -1016,28 +1001,7 @@ int intLog2(int x)
     x = (x & l) + ((x >> 8) & l);
     x = (x & m) + ((x >> 16) & m);
     x = x + ~0;
-    return x; 
-}
-
-/*
- * isAsciiDigit - return 1 if 0x30 <= x <= 0x39 (ASCII codes for characters
- *                '0' to '9')
- *   Example: isAsciiDigit(0x35) = 1.
- *            isAsciiDigit(0x3a) = 0.
- *            isAsciiDigit(0x05) = 0.
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 15
- *   Rating: 3
- */
-int isAsciiDigit(int x)
-{
-    int lower = 0x2F;
-    int higher = 0x3a;
-    int y = x + ~lower + 1;
-    int z = higher + ~x + 1;
-    y >>= 31;
-    z >>= 31;
-    return !(y & z);
+    return x;
 }
 
 /*
@@ -1060,7 +1024,7 @@ int isEqual(int x, int y)
  *   Max ops: 24
  *   Rating: 3
  */
-int isGreater(int x, int y) //Comes from stackoverflow 
+int isGreater(int x, int y)  // Comes from stackoverflow
 {
     int diff = x ^ y;
     diff |= diff >> 1;
@@ -1084,7 +1048,17 @@ int isGreater(int x, int y) //Comes from stackoverflow
  */
 int isLess(int x, int y)
 {
-    return isGreater(y, x);
+    int diff = x ^ y;
+    diff |= diff >> 1;
+    diff |= diff >> 2;
+    diff |= diff >> 4;
+    diff |= diff >> 8;
+    diff |= diff >> 16;
+
+    diff &= ~(diff >> 1) | 0x80000000;
+    diff &= (y ^ 0x80000000) & (x ^ 0x7fffffff);
+
+    return !!diff;
 }
 
 /*
@@ -1120,7 +1094,7 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    return isLessOrEqual(0,x);
+    return isLessOrEqual(0, x);
 }
 
 /*
@@ -1164,6 +1138,21 @@ int isNotEqual(int x, int y)
 int isPallindrome(int x)
 {
     return !(x ^ bitReverse(x));
+}
+
+/*
+ * isAsciiDigit - return 1 if 0x30 <= x <= 0x39 (ASCII codes for characters
+ *                '0' to '9')
+ *   Example: isAsciiDigit(0x35) = 1.
+ *            isAsciiDigit(0x3a) = 0.
+ *            isAsciiDigit(0x05) = 0.
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 15
+ *   Rating: 3
+ */
+int isAsciiDigit(int x)
+{
+    return isLessOrEqual(0x30, x) & isLessOrEqual(x, 0x39);
 }
 
 /*
@@ -1306,7 +1295,14 @@ int logicalShift(int x, int n)
  */
 int maximumOfTwo(int x, int y)
 {
-    return 42;
+    int msk1 = isGreater(x, y);
+    int msk2 = isGreater(y, x);
+    msk1 <<= 31;
+    msk1 >>= 31;
+    msk2 <<= 31;
+    msk2 >>= 31;
+    int msk3 = ~msk1 & ~msk2;
+    return (msk1 & x) | (msk2 & y) | (msk3 & x);
 }
 
 /*
@@ -1317,7 +1313,14 @@ int maximumOfTwo(int x, int y)
  */
 int minimumOfTwo(int x, int y)
 {
-    return 42;
+    int msk1 = isLess(x, y);
+    int msk2 = isLess(y, x);
+    msk1 <<= 31;
+    msk1 >>= 31;
+    msk2 <<= 31;
+    msk2 >>= 31;
+    int msk3 = ~msk1 & ~msk2;
+    return (msk1 & x) | (msk2 & y) | (msk3 & x);
 }
 
 /*
@@ -1412,7 +1415,7 @@ int replaceByte(int x, int n, int c)
  */
 int rotateLeft(int x, int n)
 {
-    int mask = (1 << 31);//Produce mask
+    int mask = (1 << 31);  // Produce mask
     mask >>= 32 + ~n + 1;
     mask <<= 1;
     return ((x << n & mask) | (x >> (32 + ~n + 1) & ~mask));
@@ -1428,10 +1431,10 @@ int rotateLeft(int x, int n)
  */
 int rotateRight(int x, int n)
 {
-    int mask = (1 << 31);//Produce mask
+    int mask = (1 << 31);  // Produce mask
     mask >>= n;
     mask <<= 1;
-     return ((x >> n & ~mask) | (x << (32 + ~n + 1) & mask));
+    return ((x >> n & ~mask) | (x << (32 + ~n + 1) & mask));
 }
 
 /*
@@ -1449,8 +1452,10 @@ int satAdd(int x, int y)
     int sign_x = x >> 31, sign_y = y >> 31;
     int z = x + y;
     int sign_z = z >> 31;
-    int msk = (sign_x & sign_y & ~sign_z) | (~sign_x & ~sign_y & sign_z);//++-, --+ are not allowed
-    return (sign_x & sign_y & ~sign_z & (1 << 31)) | (~sign_x & ~sign_y & sign_z & ~(1 << 31)) | (~msk & z);
+    int msk = (sign_x & sign_y & ~sign_z) |
+              (~sign_x & ~sign_y & sign_z);  //++-, --+ are not allowed
+    return (sign_x & sign_y & ~sign_z & (1 << 31)) |
+           (~sign_x & ~sign_y & sign_z & ~(1 << 31)) | (~msk & z);
 }
 
 /*
@@ -1466,8 +1471,10 @@ int satMul2(int x)
 {
     int sign_x = x >> 31;
     int z = x << 1, sign_z = z >> 31;
-    int msk = (sign_x & ~sign_z) | (~sign_x & sign_z);//+-, -+ are not allowed.
-    return (sign_x & ~sign_z & (1 << 31)) | (~sign_x & sign_z & ~(1 << 31)) | (~msk & z); 
+    int msk =
+        (sign_x & ~sign_z) | (~sign_x & sign_z);  //+-, -+ are not allowed.
+    return (sign_x & ~sign_z & (1 << 31)) | (~sign_x & sign_z & ~(1 << 31)) |
+           (~msk & z);
 }
 
 /*
@@ -1486,9 +1493,11 @@ int satMul3(int x)
     int sign_x = x >> 31;
     int sign_2x = (x << 1) >> 31;
     int z = (x << 1) + x, sign_z = z >> 31;
-    int msk = ((sign_x & ~sign_z) | (sign_x & ~sign_2x)) | ((~sign_x & sign_z) | (~sign_x & sign_2x));
-    return (((sign_x & ~sign_z) | (sign_x & ~sign_2x)) & (1 << 31)) | 
-        (((~sign_x & sign_z) | (~sign_x & sign_2x)) & ~(1 << 31)) | (~msk & z); 
+    int msk = ((sign_x & ~sign_z) | (sign_x & ~sign_2x)) |
+              ((~sign_x & sign_z) | (~sign_x & sign_2x));
+    return (((sign_x & ~sign_z) | (sign_x & ~sign_2x)) & (1 << 31)) |
+           (((~sign_x & sign_z) | (~sign_x & sign_2x)) & ~(1 << 31)) |
+           (~msk & z);
 }
 
 /*
@@ -1501,7 +1510,8 @@ int satMul3(int x)
  */
 int sign(int x)
 {
-    int msk = x, sign_x = x >> 31;//If x == 0, mask = 0. If x != 0. mask = ~0;
+    int msk = x, sign_x = x >> 31;  // If x == 0, mask = 0. If x != 0. mask =
+                                    // ~0;
     msk |= msk << 1;
     msk |= msk << 2;
     msk |= msk << 4;
@@ -1536,8 +1546,8 @@ int signMag2TwosComp(int x)
  */
 int specialBits(void)
 {
-    int a = 0xC, b = 0x5, c=0x3;
-    int x = (a << 12 | b << 16 ) | c << 20;
+    int a = 0xC, b = 0x5, c = 0x3;
+    int x = (a << 12 | b << 16) | c << 20;
     return ~x;
 }
 
@@ -1553,7 +1563,8 @@ int subtractionOK(int x, int y)
 {
     int sign_x = x >> 31, sign_y = y >> 31;
     int z = x + ~y + 1, sign_z = z >> 31;
-    return !!(~sign_x & sign_y & ~sign_z) | !!(sign_x & ~sign_y & sign_z) | !!(~(sign_x ^ sign_y));// +-+, -+-, ++x, --x are allowed
+    return !!(~sign_x & sign_y & ~sign_z) | !!(sign_x & ~sign_y & sign_z) |
+           !!(~(sign_x ^ sign_y));  // +-+, -+-, ++x, --x are allowed
 }
 
 /*
@@ -1565,7 +1576,7 @@ int subtractionOK(int x, int y)
  */
 int thirdBits(void)
 {
-    int a = 0x49; 
+    int a = 0x49;
     return (((a << 27) | (a << 18) | (a << 9) | a));
 }
 
@@ -1604,8 +1615,8 @@ int tmin(void)
 int trueFiveEighths(int x)
 {
     int remainder = 0, sign_x = x >> 31, mask = 0x7, true_remainder = 0;
-    remainder = x & mask;//The mask for taking remainder
-    remainder = (remainder << 2) + remainder;//The true remainder
+    remainder = x & mask;                      // The mask for taking remainder
+    remainder = (remainder << 2) + remainder;  // The true remainder
     true_remainder = remainder & mask;
     remainder >>= 3;
     int answer = x >> 3;
@@ -1626,8 +1637,8 @@ int trueFiveEighths(int x)
 int trueThreeFourths(int x)
 {
     int remainder = 0, sign_x = x >> 31, mask = 0x3, true_remainder = 0;
-    remainder = x & mask;//The mask for taking remainder
-    remainder = (remainder << 2) + ~remainder + 1;//The true remainder
+    remainder = x & mask;  // The mask for taking remainder
+    remainder = (remainder << 2) + ~remainder + 1;  // The true remainder
     true_remainder = remainder & mask;
     remainder >>= 2;
     int answer = x >> 2;
@@ -1665,5 +1676,12 @@ int upperBits(int n)
     int x = (1 << 31);
     x >>= n;
     x <<= 1;
-    return x;
+    int msk = n ^ 0x20;  // Deal with 32
+    msk = !msk;
+    msk |= msk << 1;
+    msk |= msk << 2;
+    msk |= msk << 4;
+    msk |= msk << 8;
+    msk |= msk << 16;
+    return x | msk;
 }
