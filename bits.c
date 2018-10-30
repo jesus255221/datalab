@@ -775,18 +775,17 @@ unsigned floatNegate(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-    int expo_f = (uf >> 23 & 0xFF);
-    int mtsa_f = (uf & 0x7FFFFF);
-    int sign_f = (uf >> 31 & 0x1);
+    int expo_f;
     if (x > 127) {
         expo_f = 0xFF;
     }
     else if (x < -127){
         expo_f = 0;
-        mtsa_f = 0;
     }
-    else if ()
-    return (sign_f << 31 & expo_f << 23) & mtsa_f;
+    else {
+        expo = x + 127;
+    }
+    return expo_f << 23;
 }
 
 /*
@@ -819,7 +818,7 @@ unsigned floatScale1d2(unsigned uf)
             mtsa_f >>= 1;
         return (uf & 0xFF800000u) | (mtsa_f);
     }
-    else if (expo_f == 1) { 
+    else if (expo_f == 1) { //If it is the least normalized number
         mtsa_f >>= 1;
         mtsa_f |= (1 << 22);
         return sign_f << 31 | (0x807FFFFFu & mtsa_f);
@@ -843,7 +842,26 @@ unsigned floatScale1d2(unsigned uf)
  */
 unsigned floatScale2(unsigned uf)
 {
-    return 42;
+    int expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    int sign_f = (uf >> 31 & 0x1);
+    if (expo_f == 0xFF) { // If the number is nan or infinite
+        return uf;
+    }
+    else if (!expo_f && !mtsa_f) {//If the number is zero
+        return uf;
+    }
+    else if (!expo_f) {// if the number is a denormalized number
+        mtsa <<= 1;// The left most bit will automatically be integrate into expo_t
+    }
+    else if (expo_f - 128 == 127){ //The number bbefore infinite
+        mtsa = 0;
+        expo_f++;
+    }
+    else {
+        expo_f++;
+    }
+    return sign_f << 31 | expo_f << 23 | mtsa_f;
 }
 
 /*
@@ -859,7 +877,26 @@ unsigned floatScale2(unsigned uf)
  */
 unsigned floatScale64(unsigned uf)
 {
-    return 42;
+    nt expo_f = (uf >> 23 & 0xFF);
+    int mtsa_f = (uf & 0x7FFFFF);
+    int sign_f = (uf >> 31 & 0x1);
+    if (expo_f == 0xFF) { // If the number is nan or infinite
+        return uf;
+    }
+    else if (!expo_f && !mtsa_f) {//If the number is zero
+        return uf;
+    }
+    else if (!expo_f) {// if the number is a denormalized number
+        mtsa <<= 1;// The left most bit will automatically be integrate into expo_t
+    }
+    else if (expo_f - 128 == 127){ //The number bbefore infinite
+        mtsa = 0;
+        expo_f++;
+    }
+    else {
+        expo_f++;
+    }
+    return sign_f << 31 | expo_f << 23 | mtsa_f;
 }
 
 /*
@@ -1308,7 +1345,8 @@ int minusOne(void)
  */
 int multFiveEighths(int x)
 {
-    return 42;
+    int y = x + x + x + x + x;
+    return dividePower2(y, 3);
 }
 
 /*
@@ -1566,8 +1604,14 @@ int tmin(void)
  */
 int trueFiveEighths(int x)
 {
-
-    return 42;
+    int remainder = 0, sign_x = x >> 31, mask = 0x7, true_remainder = 0;
+    remainder = x & mask;//The mask for taking remainder
+    remainder = remainder << 2 + remainder;//The true remainder
+    true_remainder = remainder & mask;
+    remainder >>= 3;
+    int answer = x >> 3;
+    answer = answer + answer + answer + answer + answer;
+    return answer + ;
 }
 
 /*
@@ -1582,7 +1626,14 @@ int trueFiveEighths(int x)
  */
 int trueThreeFourths(int x)
 {
-    return 42;
+    int remainder = 0, sign_x = x >> 31, mask = 0x3, true_remainder = 0;
+    remainder = x & mask;//The mask for taking remainder
+    remainder = remainder << 2 + ~remainder + 1;//The true remainder
+    true_remainder = remainder & mask;
+    remainder >>= 2;
+    int answer = x >> 2;
+    answer = answer + answer + answer;
+    return answer + remainder + (sign_x & !!true_remainder);
 }
 
 /*
@@ -1596,7 +1647,10 @@ int trueThreeFourths(int x)
  */
 int twosComp2SignMag(int x)
 {
-    return 42;
+    int sign_x = x >> 31;
+    x = (x ^ sign_x) + ~sign_x + 1;
+    x |= sign_x << 31;
+    return x;
 }
 
 /*
