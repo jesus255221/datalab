@@ -1295,7 +1295,12 @@ int isPallindrome(int x)
  */
 int isAsciiDigit(int x)
 {
-    return isLessOrEqual(0x30, x) & isLessOrEqual(x, 0x39);
+    int sign_x = x >> 31;
+    int y = 0x2f - x;
+    int z = x - 0x3a;
+    y >>= 31;
+    z >>= 31;
+    return 1 & y & z & ~sign_x;
 }
 
 /*
