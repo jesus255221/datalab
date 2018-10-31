@@ -1135,10 +1135,8 @@ int isGreater(int x, int y)  // Comes from stackoverflow
     diff |= diff >> 4;
     diff |= diff >> 8;
     diff |= diff >> 16;
-
     diff &= ~(diff >> 1) | 0x80000000;
     diff &= (x ^ 0x80000000) & (y ^ 0x7fffffff);
-
     return !!diff;
 }
 
@@ -1157,10 +1155,8 @@ int isLess(int x, int y)
     diff |= diff >> 4;
     diff |= diff >> 8;
     diff |= diff >> 16;
-
     diff &= ~(diff >> 1) | 0x80000000;
     diff &= (y ^ 0x80000000) & (x ^ 0x7fffffff);
-
     return !!diff;
 }
 
@@ -1179,7 +1175,6 @@ int isLessOrEqual(int x, int y)
     diff |= diff >> 4;
     diff |= diff >> 8;
     diff |= diff >> 16;
-
     diff &= ~(diff >> 1) | 0x80000000;
     diff &= (y ^ 0x80000000) & (x ^ 0x7fffffff);
     return !!diff | !(x ^ y);
@@ -1200,10 +1195,8 @@ int isNegative(int x)
     diff |= diff >> 4;
     diff |= diff >> 8;
     diff |= diff >> 16;
-
     diff &= ~(diff >> 1) | 0x80000000;
     diff &= (0 ^ 0x80000000) & (x ^ 0x7fffffff);
-
     return !!diff;
 }
 
@@ -1222,7 +1215,6 @@ int isNonNegative(int x)
     diff |= diff >> 4;
     diff |= diff >> 8;
     diff |= diff >> 16;
-
     diff &= ~(diff >> 1) | 0x80000000;
     diff &= (x ^ 0x80000000) & (0 ^ 0x7fffffff);
     return !!diff | !(0 ^ x);
