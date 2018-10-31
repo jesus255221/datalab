@@ -1408,7 +1408,7 @@ int leastBitPos(int x)
  */
 int leftBitCount(int x)
 {
-    int x = ~x;
+    x = ~x;
     x = x | x >> 1;  // Fill ones to the LSB
     x = x | x >> 2;
     x = x | x >> 4;
@@ -1582,7 +1582,11 @@ int oddBits(void)
  */
 int remainderPower2(int x, int n)
 {
-    x += ~(dividePower2(x, n) << n) + 1;
+    int mask = ~0;                             // Construct 0xFFFFFFFF
+    mask = ~(mask << n);                       // Construct a mask
+    int y = (x >> n) + !!(x & mask & x >> 31);  // If x is minus number and there
+                                               // are ones under nth bits
+    x += ~(y << n) + 1;
     return x;
 }
 
