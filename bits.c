@@ -1408,7 +1408,36 @@ int leastBitPos(int x)
  */
 int leftBitCount(int x)
 {
-    return countLeadingZero(~x);
+    int x = ~x;
+    x = x | x >> 1;  // Fill ones to the LSB
+    x = x | x >> 2;
+    x = x | x >> 4;
+    x = x | x >> 8;
+    x = x | x >> 16;
+    x = ~x;
+    int y = 0, count = 0;
+    const int a = 0x55, b = 0x33, c = 0x0F, mask = 0xFF;
+    y = x & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 8 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 16 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    y = x >> 24 & mask;
+    y = (y & a) + ((y >> 1) & a);
+    y = (y & b) + ((y >> 2) & b);
+    y = (y & c) + ((y >> 4) & c);
+    count += y;
+    return count;  // Calculate the left zeros
 }
 
 /*
@@ -1509,9 +1538,10 @@ int minusOne(void)
 int multFiveEighths(int x)
 {
     int y = x + x + x + x + x;
-    int mask = ~0;                             // Construct 0xFFFFFFFF
-    mask = ~(mask << 3);                       // Construct a mask
-    return (y >> 3) + !!(y & mask & y >> 31); //Decide whether it is minus number
+    int mask = ~0;        // Construct 0xFFFFFFFF
+    mask = ~(mask << 3);  // Construct a mask
+    return (y >> 3) +
+           !!(y & mask & y >> 31);  // Decide whether it is minus number
 }
 
 /*
