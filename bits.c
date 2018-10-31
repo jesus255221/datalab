@@ -1477,14 +1477,12 @@ int logicalShift(int x, int n)
  */
 int maximumOfTwo(int x, int y)
 {
-    int msk1 = isGreater(x, y);
-    int msk2 = isGreater(y, x);
-    msk1 <<= 31;
-    msk1 >>= 31;
-    msk2 <<= 31;
-    msk2 >>= 31;
-    int msk3 = ~msk1 & ~msk2;
-    return (msk1 & x) | (msk2 & y) | (msk3 & x);
+    int z = x - y;
+    int sign_x = x >> 31, sign_y = y >> 31, sign_z = z >> 31;
+    int x_mask = ~sign_x & sign_y;
+    int y_mask = sign_x & ~sign_y;
+    int z_mask = ~x_mask & ~y_mask;
+    return (x_mask & x) | (y_mask & y) | (z_mask & ((~sign_z & x) | (sign_z & y)));
 }
 
 /*
@@ -1495,14 +1493,12 @@ int maximumOfTwo(int x, int y)
  */
 int minimumOfTwo(int x, int y)
 {
-    int msk1 = isLess(x, y);
-    int msk2 = isLess(y, x);
-    msk1 <<= 31;
-    msk1 >>= 31;
-    msk2 <<= 31;
-    msk2 >>= 31;
-    int msk3 = ~msk1 & ~msk2;
-    return (msk1 & x) | (msk2 & y) | (msk3 & x);
+    int z = x - y;
+    int sign_x = x >> 31, sign_y = y >> 31, sign_z = z >> 31;
+    int x_mask = sign_x & ~sign_y;
+    int y_mask = ~sign_x & sign_y;
+    int z_mask = ~x_mask & ~y_mask;
+    return (x_mask & x) | (y_mask & y) | (z_mask & ((sign_z & x) | (~sign_z & y)));
 }
 
 /*
