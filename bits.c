@@ -1509,7 +1509,9 @@ int minusOne(void)
 int multFiveEighths(int x)
 {
     int y = x + x + x + x + x;
-    return dividePower2(y, 3);
+    int mask = ~0;                             // Construct 0xFFFFFFFF
+    mask = ~(mask << 3);                       // Construct a mask
+    return (y >> 3) + !!(y & mask & y >> 31); //Decide whether it is minus number
 }
 
 /*
@@ -1532,7 +1534,12 @@ int negate(int x)
  */
 int oddBits(void)
 {
-    return evenBits() << 1;
+    int x = 2;
+    x = x | x << 2;
+    x = x | x << 4;
+    x = x | x << 8;
+    x = x | x << 16;
+    return x;
 }
 
 /*
@@ -1671,15 +1678,8 @@ int satMul3(int x)
  */
 int sign(int x)
 {
-    int msk = x, sign_x = x >> 31;  // If x == 0, mask = 0. If x != 0. mask =
-                                    // ~0;
-    msk |= msk << 1;
-    msk |= msk << 2;
-    msk |= msk << 4;
-    msk |= msk << 8;
-    msk |= msk << 16;
-    msk >>= 31;
-    return (sign_x | (~sign_x & 1)) & msk;
+    int sign_x = x >> 31;
+    return sign_x | !!x;
 }
 
 /*
