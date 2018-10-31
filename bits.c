@@ -1335,8 +1335,8 @@ int isPositive(int x)
  */
 int isPower2(int x)
 {
-    int y = x >> 31;
-    return !(bitCount(x) ^ 0x1 ^ y);
+    int sign_x = x >> 31;
+    return (!(x & (x-1))) & (~sign_x & !!x);
 }
 
 /*
@@ -1862,14 +1862,8 @@ int twosComp2SignMag(int x)
 int upperBits(int n)
 {
     int x = (1 << 31);
-    x >>= n;
-    x <<= 1;
-    int msk = n ^ 0x20;  // Deal with 32
-    msk = !msk;
-    msk |= msk << 1;
-    msk |= msk << 2;
-    msk |= msk << 4;
-    msk |= msk << 8;
-    msk |= msk << 16;
-    return x | msk;
+    n += ~0;//n--
+    int sign_n = n >> 31;
+    x >>= (~sign_n & n);
+    return x & ~sign_n;
 }
