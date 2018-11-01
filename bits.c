@@ -1358,12 +1358,7 @@ int isZero(int x)
  */
 int leastBitPos(int x)
 {
-    x |= x << 1;
-    x |= x << 2;
-    x |= x << 4;
-    x |= x << 8;
-    x |= x << 16;
-    return ~(x ^ (~x << 1 | 1));
+    return x & (~x + 1);
 }
 
 /*
@@ -1418,12 +1413,11 @@ int leftBitCount(int x)
  */
 int logicalNeg(int x)
 {
-    x |= x << 16;
-    x |= x << 8;
-    x |= x << 4;
-    x |= x << 2;
-    x |= x << 1;
-    x >>= 31;
+    x |= x >> 16;
+    x |= x >> 8;
+    x |= x >> 4;
+    x |= x >> 2;
+    x |= x >> 1;
     x &= 1;
     return x ^ 0x1;
 }
