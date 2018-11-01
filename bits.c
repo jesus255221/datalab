@@ -1189,15 +1189,8 @@ int isLessOrEqual(int x, int y)
  */
 int isNegative(int x)
 {
-    int diff = 0 ^ x;
-    diff |= diff >> 1;
-    diff |= diff >> 2;
-    diff |= diff >> 4;
-    diff |= diff >> 8;
-    diff |= diff >> 16;
-    diff &= ~(diff >> 1) | 0x80000000;
-    diff &= (0 ^ 0x80000000) & (x ^ 0x7fffffff);
-    return !!diff;
+    int sign_x = x >> 31;
+    return sign_x & 1;
 }
 
 /*
@@ -1209,15 +1202,8 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    int diff = 0 ^ x;
-    diff |= diff >> 1;
-    diff |= diff >> 2;
-    diff |= diff >> 4;
-    diff |= diff >> 8;
-    diff |= diff >> 16;
-    diff &= ~(diff >> 1) | 0x80000000;
-    diff &= (x ^ 0x80000000) & (0 ^ 0x7fffffff);
-    return !!diff | !(0 ^ x);
+    int sign_x = x >> 31;
+    return 1 & ~sign_x;
 }
 
 /*
@@ -1312,17 +1298,8 @@ int isAsciiDigit(int x)
  */
 int isPositive(int x)
 {
-    int diff = x ^ 0;
-    diff |= diff >> 1;
-    diff |= diff >> 2;
-    diff |= diff >> 4;
-    diff |= diff >> 8;
-    diff |= diff >> 16;
-
-    diff &= ~(diff >> 1) | 0x80000000;
-    diff &= (x ^ 0x80000000) & (0 ^ 0x7fffffff);
-
-    return !!diff;
+    int sign_x = x >> 31;
+    return ~sign_x & !!x & 1;
 }
 
 /*
